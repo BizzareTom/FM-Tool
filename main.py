@@ -113,7 +113,7 @@ quit_button = ttk.Button(root, text="Beenden", command=quit_program)
 quit_button.place(x=18, y=img_tk.height() + 20)  # Position direkt unter dem Bild, mit etwas Abstand
 
 # Schaltflächen erstellen
-buttons = ["Badges", "Cities", "Portraits", "Stadiums", "TrainingCamps", "Trophies", "Dummy 1", "Dumme Penisnutte", "Elende Fotzschlampe", "Dummy 4", "Dummy 5"]
+buttons = ["Badges", "Cities", "Portraits", "Stadiums", "TrainingCamps", "Trophies", "Dummy 1", "Dummy 2", "Dummy 3", "Dummy 4", "Dummy 5"]
 for button in buttons:
     btn = ttk.Button(root, text=button, command=lambda b=button: button_click(b))
     btn.pack(pady=5)
