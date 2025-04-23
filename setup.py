@@ -57,7 +57,7 @@ setup(
     long_description_content_type="text/markdown",
     license="GPLv3",
     packages=find_packages(exclude=["tests"]),
-    entry_points={ "console_scripts": [ "FM-Tool = fm_tool.__main__" ] },
+    entry_points={ "gui_scripts": [ "FM-Tool = fm_tool.main:main" ] },
     install_requires=[
         "requests>=2.32.3",
         "pyperclip>=1.9.0",
