@@ -8,6 +8,7 @@ import pyperclip
 import configparser
 from io import BytesIO
 from platformdirs import user_config_dir
+from importlib.resources import files
 
 from fm_tool.processions.cities import*
 from fm_tool.processions.stadiums import*
@@ -57,12 +58,12 @@ def main():
     root.geometry("1080x608")
     root.configure(bg="#d8d8d8")
 
-    IMG_FOLDER = "img"
+    IMG_FOLDER = files("fm_tool").joinpath("img")
 
     # Bild oben links - Signaturbild
-    def load_image(image_path):
+    def load_image(image_data):
         try:
-            image = Image.open(image_path)
+            image = Image.open(io.BytesIO(image_data))
             image_tk = ImageTk.PhotoImage(image)
             return image_tk
         except Exception as e:
@@ -81,7 +82,7 @@ def main():
         """ Schließt das Programm. """
         root.quit()
 
-    img_tk = load_image(os.path.join(IMG_FOLDER, "Tooledit.png"))
+    img_tk = load_image(IMG_FOLDER.joinpath("Tooledit.png").read_bytes())
     if img_tk:
         image_label = tk.Label(root, image=img_tk, bg="#d8d8d8")
         image_label.image = img_tk
@@ -128,8 +129,8 @@ def main():
         btn.pack(pady=5)
         
     try:
-        img_path = os.path.join(IMG_FOLDER, "cty.png")
-        image = Image.open(img_path).resize((30, 30), Image.LANCZOS)  # <-- Größe anpassen hier
+        img_data = IMG_FOLDER.joinpath("cty.png").read_bytes()
+        image = Image.open(io.BytesIO(img_data)).resize((30, 30), Image.LANCZOS)  # <-- Größe anpassen hier
         img_tk = ImageTk.PhotoImage(image)
 
         image_label = tk.Label(root, image=img_tk, bg="#d8d8d8")
@@ -139,8 +140,8 @@ def main():
         print(f"Das Bild cty.png konnte nicht geladen werden: {e}")
         
     try:
-        img_path = os.path.join(IMG_FOLDER, "stdm.png")
-        image = Image.open(img_path).resize((22, 22), Image.LANCZOS)  # <-- Größe anpassen hier
+        img_data = IMG_FOLDER.joinpath("stdm.png").read_bytes()
+        image = Image.open(io.BytesIO(img_data)).resize((22, 22), Image.LANCZOS)  # <-- Größe anpassen hier
         img_tk = ImageTk.PhotoImage(image)
 
         image_label = tk.Label(root, image=img_tk, bg="#d8d8d8")
@@ -150,8 +151,8 @@ def main():
         print(f"Das Bild stdm.png konnte nicht geladen werden: {e}")
         
     try:
-        img_path = os.path.join(IMG_FOLDER, "bdg.ico")
-        image = Image.open(img_path).resize((20, 20), Image.LANCZOS)  # <-- Größe anpassen hier
+        img_data = IMG_FOLDER.joinpath("bdg.ico").read_bytes()
+        image = Image.open(io.BytesIO(img_data)).resize((20, 20), Image.LANCZOS)  # <-- Größe anpassen hier
         img_tk = ImageTk.PhotoImage(image)
 
         image_label = tk.Label(root, image=img_tk, bg="#d8d8d8")
