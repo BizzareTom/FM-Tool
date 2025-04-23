@@ -7,15 +7,18 @@ import os
 import pyperclip
 import configparser
 from io import BytesIO
-from processions.cities import*
-from processions.stadiums import*
-from processions.badges import*
+from platformdirs import user_config_dir
+
+from fm_tool.processions.cities import*
+from fm_tool.processions.stadiums import*
+from fm_tool.processions.badges import*
 
 def main():
     # ============================
     # UPSETTEN DER KONFIGURATIONSDATEI
     # ============================
-    INI_FILE="directories.ini"
+    CONFIG_DIR=user_config_dir("FM-Tool", ensure_exists=True)
+    INI_FILE=os.path.join(CONFIG_DIR, "directories.ini")
 
     def load_directories():
         """ Lädt die gespeicherten Verzeichnisse aus einer .INI Datei. """
@@ -23,6 +26,7 @@ def main():
         
         if not os.path.exists(INI_FILE):
             save_directories("", "")  # Erstellt Datei mit leeren Werten
+            print(f"Eine leere Konfigurationsdatei wurde unter {INI_FILE} angelegt.")
             return "", ""
             
         config.read(INI_FILE)
@@ -87,6 +91,10 @@ def main():
 
     # Laden der Verzeichnisse
     fm_main_dir, fm_graphics_dir = load_directories()
+
+    if not os.path.exists(fm_main_dir) or not os.path.exists(fm_graphics_dir):
+        print(f"Bitte die Konfigurationsdatei unter {INI_FILE} ausfüllen. Siehe README für Details.")
+        return
 
     # Label für den FM Hauptverzeichnis
     fm_main_dir_label = tk.Label(root, text="FM Hauptverzeichnis:", bg="#d8d8d8", fg="white")

@@ -61,7 +61,9 @@ setup(
     install_requires=[
         "requests>=2.32.3",
         "pyperclip>=1.9.0",
-        "pillow>=11.2.1"
+        "pillow>=11.2.1",
+        "rembg[cpu]>=2.0.65",
+        "platformdirs>=4.3.7"
     ],
     python_requires=">=3.9",
     include_package_data=True,
