@@ -22,7 +22,7 @@ with open("README.md", encoding="utf-8") as f:
 classifiers = [
     "Intended Audience :: End Users/Desktop",
 
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
 
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
@@ -55,7 +55,7 @@ setup(
     version=version["short"],
     long_description=long_description,
     long_description_content_type="text/markdown",
-    license="GPLv3",
+    license="AGPLv3",
     packages=find_packages(exclude=["tests"]),
     entry_points={ "gui_scripts": [ "FM-Tool = fm_tool.__main__:main" ] },
     install_requires=[
