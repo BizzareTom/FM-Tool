@@ -9,6 +9,7 @@ import configparser
 from io import BytesIO
 from platformdirs import user_config_dir
 from importlib.resources import files
+import sys
 
 from fm_tool.processions.cities import*
 from fm_tool.processions.stadiums import*
@@ -36,6 +37,14 @@ def main():
         fm_graphics_dir = config.get("Directories", "fm_graphics_dir", fallback="")
 
         return fm_main_dir, fm_graphics_dir
+        
+    def resource_path(relative_path):
+        try:
+            base_path = sys._MEIPASS
+        except AttributeError:
+            base_path = os.path.abspath(".")
+            
+        return os.path.join(base_path, relative_path)
 
     def save_directories(fm_main_dir, fm_graphics_dir):
         """ Speichert die Verzeichnisse in einer .INI Datei. """
@@ -82,20 +91,25 @@ def main():
         """ Schließt das Programm. """
         root.quit()
 
-    img_tk = load_image(IMG_FOLDER.joinpath("Tooledit.png").read_bytes())
+    img_path = resource_path("fm_tool/img/Tooledit.png")
+    try:
+        with open(img_path, "rb") as f:
+            img_tk = load_image(f.read())
+    except FileNotFoundError:
+        img_tk = None
+
     if img_tk:
         image_label = tk.Label(root, image=img_tk, bg="#d8d8d8")
-        image_label.image = img_tk
+        image_label.image = img_tk  # Referenz halten, sonst verschwindet Bild
         image_label.place(x=10, y=10)
+        y_offset = img_tk.height() + 20
     else:
         print("Das Bild Tooledit.png konnte nicht geladen werden. Stellen Sie sicher, dass es im richtigen Verzeichnis vorhanden ist.")
+        y_offset= 100
+
 
     # Laden der Verzeichnisse
     fm_main_dir, fm_graphics_dir = load_directories()
-
-    if not os.path.exists(fm_main_dir) or not os.path.exists(fm_graphics_dir):
-        print(f"Bitte die Konfigurationsdatei unter {INI_FILE} ausfüllen. Siehe README für Details.")
-        return
 
     # Label für den FM Hauptverzeichnis
     fm_main_dir_label = tk.Label(root, text="FM Hauptverzeichnis:", bg="#d8d8d8", fg="white")
@@ -120,7 +134,7 @@ def main():
     fm_graphics_dir_button.pack(pady=5)
 
     quit_button = ttk.Button(root, text="Beenden", command=quit_program)
-    quit_button.place(x=18, y=img_tk.height() + 20)  # Position direkt unter dem Bild, mit etwas Abstand
+    quit_button.place(x=18, y=y_offset)  # Position direkt unter dem Bild, mit etwas Abstand
 
     # Schaltflächen erstellen
     buttons = ["Badges", "Cities", "Portraits", "Stadiums", "TrainingCamps", "Trophies", "Dummy 1", "Dummy 2", "Dummy 3", "Dummy 4", "Dummy 5"]
