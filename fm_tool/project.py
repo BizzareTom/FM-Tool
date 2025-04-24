@@ -5,8 +5,8 @@ project = {
     "description"  : "Modding-Tool für den EA Fussballmanager 13/14",
     "url"          : "https://github.com/BizzareTom/FM-Tool",
     "year"         : "2025",
-    "author"       : "BizzareTom",
-    "author_email" : "pornbro.tom@gmail.com",
+    "author"       : "SlideSheapness",
+    "author_email" : "slidesheapness@gmail.com",
     "categories"   : [
         "Topic :: Games/Entertainment",
         "Topic :: Multimedia :: Graphics",
