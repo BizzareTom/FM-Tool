@@ -10,10 +10,11 @@ from io import BytesIO
 from platformdirs import user_config_dir
 from importlib.resources import files
 import sys
-
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from fm_tool.processions.cities import*
 from fm_tool.processions.stadiums import*
 from fm_tool.processions.badges import*
+from fm_tool.processions.custom import*
 
 def main():
     # ============================
@@ -91,7 +92,9 @@ def main():
         """ Schließt das Programm. """
         root.quit()
 
-    img_path = resource_path("fm_tool/img/Tooledit.png")
+    # Absolute Pfadangabe basierend auf der aktuellen Datei (__file__)
+    base_dir = os.path.dirname(__file__)
+    img_path = os.path.join(base_dir, "img", "Tooledit.png")
     try:
         with open(img_path, "rb") as f:
             img_tk = load_image(f.read())
@@ -137,7 +140,7 @@ def main():
     quit_button.place(x=18, y=y_offset)  # Position direkt unter dem Bild, mit etwas Abstand
 
     # Schaltflächen erstellen
-    buttons = ["Badges", "Cities", "Portraits", "Stadiums", "TrainingCamps", "Trophies", "Dummy 1", "Dummy 2", "Dummy 3", "Dummy 4", "Dummy 5"]
+    buttons = ["Badges", "Cities", "Portraits", "Stadiums", "TrainingCamps", "Trophies", "Custom", "Dummy 2", "Dummy 3", "Dummy 4", "Dummy 5"]
     for button in buttons:
         btn = ttk.Button(root, text=button, command=lambda b=button: button_click(b))
         btn.pack(pady=5)
@@ -186,6 +189,8 @@ def main():
             open_stadiums_dialog()
         elif button_name == "Badges":
             open_badges_dialog(root, fm_graphics_dir_entry.get())
+        elif button_name == "Custom":
+            open_custom_dialog(root,fm_graphics_dir_entry.get())
         else:
             print(f"Keine Aktion für Button '{button_name}' definiert.")
 
