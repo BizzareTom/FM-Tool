@@ -1,335 +1,189 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox, simpledialog
-import requests
-from PIL import Image, ImageTk, ImageGrab
-import io
+from tkinter import ttk, filedialog, messagebox
 import os
-import pyperclip
 import configparser
-from io import BytesIO
 from platformdirs import user_config_dir
 from importlib.resources import files
+from PIL import Image, ImageTk, ImageGrab
 import sys
+import pyperclip
+import io
+import requests
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from fm_tool.processions.cities import*
-from fm_tool.processions.stadiums import*
-from fm_tool.processions.badges import*
-from fm_tool.processions.custom import*
+from fm_tool.processions.cities import *
+from fm_tool.processions.stadiums import *
+from fm_tool.processions.badges import *
+from fm_tool.processions.custom import *
 
 def main():
     # ============================
-    # UPSETTEN DER KONFIGURATIONSDATEI
+    # KONFIGURATION
     # ============================
-    CONFIG_DIR=user_config_dir("FM-Tool", ensure_exists=True)
-    INI_FILE=os.path.join(CONFIG_DIR, "directories.ini")
+    CONFIG_DIR = user_config_dir("FM-Tool", ensure_exists=True)
+    INI_FILE = os.path.join(CONFIG_DIR, "directories.ini")
 
     def load_directories():
-        """ Lädt die gespeicherten Verzeichnisse aus einer .INI Datei. """
         config = configparser.ConfigParser()
-        
         if not os.path.exists(INI_FILE):
-            save_directories("", "")  # Erstellt Datei mit leeren Werten
-            print(f"Eine leere Konfigurationsdatei wurde unter {INI_FILE} angelegt.")
+            save_directories("", "")
             return "", ""
-            
         config.read(INI_FILE)
-        
-        fm_main_dir = config.get("Directories", "fm_main_dir", fallback="")
-        fm_graphics_dir = config.get("Directories", "fm_graphics_dir", fallback="")
-
-        return fm_main_dir, fm_graphics_dir
-        
-    def resource_path(relative_path):
-        try:
-            base_path = sys._MEIPASS
-        except AttributeError:
-            base_path = os.path.abspath(".")
-            
-        return os.path.join(base_path, relative_path)
+        return (
+            config.get("Directories", "fm_main_dir", fallback=""),
+            config.get("Directories", "fm_graphics_dir", fallback="")
+        )
 
     def save_directories(fm_main_dir, fm_graphics_dir):
-        """ Speichert die Verzeichnisse in einer .INI Datei. """
         config = configparser.ConfigParser()
         config["Directories"] = {
             "fm_main_dir": fm_main_dir,
             "fm_graphics_dir": fm_graphics_dir
         }
-
         with open(INI_FILE, "w") as configfile:
             config.write(configfile)
 
-    # ============================
-    # HAUPTMENÜ
-    # ============================
-
-    # HAUPTMASKE
-    root = tk.Tk()
-    root.title("Modding App für Fußballmanager")
-    root.geometry("1080x608")
-    root.configure(bg="#d8d8d8")
-
-    IMG_FOLDER = files("fm_tool").joinpath("img")
-
-    # Bild oben links - Signaturbild
-    def load_image(image_data):
-        try:
-            image = Image.open(io.BytesIO(image_data))
-            image_tk = ImageTk.PhotoImage(image)
-            return image_tk
-        except Exception as e:
-            print(f"Fehler beim Laden des Bildes: {e}")
-            return None
-            
-    #"Beenden"-Button hinzufügen
-    def quit_program():
-        # Aktuelle Pfade aus den Eingabefeldern holen
-        fm_main_dir = fm_main_dir_entry.get()
-        fm_graphics_dir = fm_graphics_dir_entry.get()
-        
-        # Pfade speichern
-        save_directories(fm_main_dir, fm_graphics_dir)
-        
-        """ Schließt das Programm. """
-        root.quit()
-
-    # Absolute Pfadangabe basierend auf der aktuellen Datei (__file__)
-    base_dir = os.path.dirname(__file__)
-    img_path = os.path.join(base_dir, "img", "Tooledit.png")
-    try:
-        with open(img_path, "rb") as f:
-            img_tk = load_image(f.read())
-    except FileNotFoundError:
-        img_tk = None
-
-    if img_tk:
-        image_label = tk.Label(root, image=img_tk, bg="#d8d8d8")
-        image_label.image = img_tk  # Referenz halten, sonst verschwindet Bild
-        image_label.place(x=10, y=10)
-        y_offset = img_tk.height() + 20
-    else:
-        print("Das Bild Tooledit.png konnte nicht geladen werden. Stellen Sie sicher, dass es im richtigen Verzeichnis vorhanden ist.")
-        y_offset= 100
-
-
-    # Laden der Verzeichnisse
-    fm_main_dir, fm_graphics_dir = load_directories()
-
-    # Label für den FM Hauptverzeichnis
-    fm_main_dir_label = tk.Label(root, text="FM Hauptverzeichnis:", bg="#d8d8d8", fg="white")
-    fm_main_dir_label.pack(pady=5)
-
-    fm_main_dir_entry = tk.Entry(root, width=50)
-    fm_main_dir_entry.insert(0, fm_main_dir)  # Setze das geladene Verzeichnis
-    fm_main_dir_entry.pack(pady=5)
-
-    fm_main_dir_button = ttk.Button(root, text="Verzeichnis auswählen", command=lambda: choose_directory(fm_main_dir_entry))
-    fm_main_dir_button.pack(pady=5)
-
-    # Label für das FM Graphics Verzeichnis
-    fm_graphics_dir_label = tk.Label(root, text="FM Graphics Verzeichnis:", bg="#d8d8d8", fg="white")
-    fm_graphics_dir_label.pack(pady=5)
-
-    fm_graphics_dir_entry = tk.Entry(root, width=50)
-    fm_graphics_dir_entry.insert(0, fm_graphics_dir)  # Setze das geladene Verzeichnis
-    fm_graphics_dir_entry.pack(pady=5)
-
-    fm_graphics_dir_button = ttk.Button(root, text="Verzeichnis auswählen", command=lambda: choose_directory(fm_graphics_dir_entry))
-    fm_graphics_dir_button.pack(pady=5)
-
-    quit_button = ttk.Button(root, text="Beenden", command=quit_program)
-    quit_button.place(x=18, y=y_offset)  # Position direkt unter dem Bild, mit etwas Abstand
-
-    # Schaltflächen erstellen
-    buttons = ["Badges", "Cities", "Portraits", "Stadiums", "TrainingCamps", "Trophies", "Custom", "Dummy 2", "Dummy 3", "Dummy 4", "Dummy 5"]
-    for button in buttons:
-        btn = ttk.Button(root, text=button, command=lambda b=button: button_click(b))
-        btn.pack(pady=5)
-        
-    try:
-        img_data = IMG_FOLDER.joinpath("cty.png").read_bytes()
-        image = Image.open(io.BytesIO(img_data)).resize((30, 30), Image.LANCZOS)  # <-- Größe anpassen hier
-        img_tk = ImageTk.PhotoImage(image)
-
-        image_label = tk.Label(root, image=img_tk, bg="#d8d8d8")
-        image_label.image = img_tk  # Referenz behalten!
-        image_label.place(x=450, y=223)
-    except Exception as e:
-        print(f"Das Bild cty.png konnte nicht geladen werden: {e}")
-        
-    try:
-        img_data = IMG_FOLDER.joinpath("stdm.png").read_bytes()
-        image = Image.open(io.BytesIO(img_data)).resize((22, 22), Image.LANCZOS)  # <-- Größe anpassen hier
-        img_tk = ImageTk.PhotoImage(image)
-
-        image_label = tk.Label(root, image=img_tk, bg="#d8d8d8")
-        image_label.image = img_tk  # Referenz behalten!
-        image_label.place(x=460, y=299)
-    except Exception as e:
-        print(f"Das Bild stdm.png konnte nicht geladen werden: {e}")
-        
-    try:
-        img_data = IMG_FOLDER.joinpath("bdg.ico").read_bytes()
-        image = Image.open(io.BytesIO(img_data)).resize((20, 20), Image.LANCZOS)  # <-- Größe anpassen hier
-        img_tk = ImageTk.PhotoImage(image)
-
-        image_label = tk.Label(root, image=img_tk, bg="#d8d8d8")
-        image_label.image = img_tk  # Referenz behalten!
-        image_label.place(x=460, y=194)
-    except Exception as e:
-        print(f"Das Bild bdg.ico konnte nicht geladen werden: {e}")
-        
-    # Funktion für Button-Klicks
-        # Funktion des Cities-Buttons
-    def button_click(button_name):
-        print(f"{button_name} wurde gedrückt")
-
-        if button_name == "Cities":
-            open_cities_dialog()
-        elif button_name == "Stadiums":
-            open_stadiums_dialog()
-        elif button_name == "Badges":
-            open_badges_dialog(root, fm_graphics_dir_entry.get())
-        elif button_name == "Custom":
-            open_custom_dialog(root,fm_graphics_dir_entry.get())
-        else:
-            print(f"Keine Aktion für Button '{button_name}' definiert.")
-
-
-    # ============================
-    # CITIES_DIALOG
-    # ============================
-
-    # Zielgröße für Cities-Bilder
-    CITIES_TARGET_WIDTH = 615
-    CITIES_TARGET_HEIGHT = 461
-
-    # Funktion zum Öffnen eines Verzeichnisses
     def choose_directory(entry):
         directory = filedialog.askdirectory()
         if directory:
             entry.delete(0, tk.END)
             entry.insert(0, directory)
 
-    # Funktion für Zwischenablage
-    def paste_image(entry_field):
-        try:
-            clipboard_data = pyperclip.paste()
-            if clipboard_data.startswith("http"):  # Falls ein Link in der Zwischenablage ist
-                entry_field.delete(0, tk.END)
-                entry_field.insert(0, clipboard_data)
-            else:
-                img = ImageGrab.grabclipboard()  # Bild aus Zwischenablage
-                if img:
-                    entry_field.delete(0, tk.END)
-                    entry_field.insert(0, "Bild aus Zwischenablage")
-                    process_cities_image(img, fm_graphics_dir_entry.get())
-                else:
-                    messagebox.showerror("Fehler", "Kein gültiges Bild in der Zwischenablage!")
-        except Exception as e:
-            messagebox.showerror("Fehler", f"Zwischenablage konnte nicht gelesen werden: {e}")
+    # ============================
+    # GUI SETUP
+    # ============================
+    root = tk.Tk()
+    root.title("Modding App für Fußballmanager")
+    root.geometry("1080x608")
+    root.configure(bg="#d8d8d8")
 
-    # Funktion zum Download eines Bildes von einer URL
-    def download_image(url):
-        if not url:
-            messagebox.showerror("Fehler", "Kein Link angegeben!")
-            return None
-        try:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-            }
-            response = requests.get(url, headers=headers, stream=True)
-            response.raise_for_status()
-            return Image.open(io.BytesIO(response.content))
-        except requests.RequestException as e:
-            messagebox.showerror("Fehler", f"Fehler beim Laden des Bildes:\n{e}")
-            return None
+    #=============================
+    # PROGRAMM ICON
+    #=============================
+    icon_path = os.path.join(os.path.dirname(__file__),"img", "Tooledit.ico")
+    root.iconbitmap(icon_path)
+    
+    # ============================
+    # OBEN: LOGO UND PFADANGABEN
+    # ============================
+    base_dir = os.path.dirname(__file__)
+    img_path = os.path.join(base_dir, "img", "Tooledit.png")
+    try:
+        logo_img = Image.open(img_path)
+        logo_tk = ImageTk.PhotoImage(logo_img)
+        image_label = tk.Label(root, image=logo_tk, bg="#d8d8d8")
+        image_label.image = logo_tk
+        image_label.place(x=10, y=10)
+        y_offset = logo_tk.height() + 20
+    except Exception:
+        y_offset = 100
+
+    fm_main_dir, fm_graphics_dir = load_directories()
+
+    fm_main_dir_label = tk.Label(root, text="FM Hauptverzeichnis:", bg="#d8d8d8")
+    fm_main_dir_label.pack(pady=5)
+    fm_main_dir_entry = tk.Entry(root, width=50)
+    fm_main_dir_entry.insert(0, fm_main_dir)
+    fm_main_dir_entry.pack(pady=5)
+    ttk.Button(root, text="Verzeichnis auswählen", command=lambda: choose_directory(fm_main_dir_entry)).pack(pady=5)
+
+    fm_graphics_dir_label = tk.Label(root, text="FM Graphics Verzeichnis:", bg="#d8d8d8")
+    fm_graphics_dir_label.pack(pady=5)
+    fm_graphics_dir_entry = tk.Entry(root, width=50)
+    fm_graphics_dir_entry.insert(0, fm_graphics_dir)
+    fm_graphics_dir_entry.pack(pady=5)
+    ttk.Button(root, text="Verzeichnis auswählen", command=lambda: choose_directory(fm_graphics_dir_entry)).pack(pady=5)
 
     # ============================
-    # STADIUMS DIALOG
+    # BUTTON-FUNKTIONEN
     # ============================
+    def quit_program():
+        save_directories(fm_main_dir_entry.get(), fm_graphics_dir_entry.get())
+        root.quit()
 
-    def open_stadiums_dialog():
-        dialog = tk.Toplevel(root)
-        dialog.title("Dialog_Stadiums")
-        dialog.geometry("800x400")
-        dialog.configure(bg="#d8d8d8")
+    def button_click(button_name):
+        if button_name == "Cities":
+            open_cities_dialog(root, fm_graphics_dir_entry.get())
+        elif button_name == "Stadiums":
+            open_stadiums_dialog(root, fm_graphics_dir_entry.get())
+        elif button_name == "Badges Club Roh":
+            open_badges_dialog(root, fm_graphics_dir_entry.get())
+        elif button_name == "Custom":
+            open_custom_dialog(root, fm_graphics_dir_entry.get())
+        else:
+            print(f"{button_name} wurde gedrückt")
 
-        # Layout: Link-Textfeld und Buttons
-        frame = tk.Frame(dialog, bg="#d8d8d8")
-        frame.pack(pady=20)
+    # ============================
+    # BUTTON-LAYOUT-BEREICH
+    # ============================
+    content = tk.Frame(root, bg="#d8d8d8")
+    content.pack(fill="both", expand=True, padx=10, pady=(y_offset, 10))
 
-        entry_field = tk.Entry(frame, width=40)
-        entry_field.insert(0, "Direktlink")
-        entry_field.bind("<FocusIn>", lambda e: entry_field.delete(0, tk.END))
-        entry_field.pack(side="left", padx=5)
+    def section_with_label(parent, title):
+        frame = tk.Frame(parent, bg="#d8d8d8")
+        label = tk.Label(frame, text=title, bg="#d8d8d8", font=("Arial", 12, "bold"))
+        label.pack(anchor="w")
+        return frame
 
-        execute_button = ttk.Button(frame, text="Ausführen", command=lambda: process_stadiums_image(download_image(entry_field.get().strip())))
-        execute_button.pack(side="left", padx=5)
+    def add_button(parent, text, command):
+        btn = ttk.Button(parent, text=text, command=lambda: button_click(text))
+        btn.pack(anchor="w", pady=2, fill="x")
 
-        paste_button = ttk.Button(dialog, text="Aus Zwischenablage einfügen", command=lambda: paste_stadiums_image(entry_field, fm_graphics_dir_entry))
-        paste_button.pack(pady=5)
+    def add_separator(parent):
+        separator = ttk.Separator(parent, orient="vertical")
+        separator.pack(side="left", fill="y", padx=10)
 
-        search_button = ttk.Button(dialog, text="Suchen", command=lambda:  s(entry_field))
-        search_button.pack(pady=5)
+    main_frame = tk.Frame(content, bg="#d8d8d8")
+    main_frame.pack(fill="both", expand=True)
 
-        cancel_button = ttk.Button(dialog, text="Abbrechen", command=dialog.destroy)
-        cancel_button.pack(pady=5)
-        
+    # === Section 1: Badges ===
+    frame_badges = section_with_label(main_frame, "Badges")
+    frame_badges.pack(side="left", fill="y", expand=True)
+    add_button(frame_badges, "Club roh (Alpha)", button_click)
+    add_button(frame_badges, "Club präpariert", button_click)
+    add_button(frame_badges, "League roh (Alpha)", button_click)
+    add_button(frame_badges, "League präpariert", button_click)
+    add_separator(main_frame)
 
+    # === Section 2: Clubbuilding ===
+    frame_clubbuilding = section_with_label(main_frame, "Clubbuilding")
+    frame_clubbuilding.pack(side="left", fill="y", expand=True)
+    add_button(frame_clubbuilding, "Cities", button_click)
+    add_button(frame_clubbuilding, "Stadiums", button_click)
+    add_button(frame_clubbuilding, "Custom", button_click)
+    add_separator(main_frame)
 
-    # Funktion zum Öffnen des Cities-Dialogs
-    def open_cities_dialog():
-        dialog = tk.Toplevel(root)
-        dialog.title("Dialog_Cities")
-        dialog.geometry("800x400")  # Fenstergröße angepasst
-        dialog.configure(bg="#d8d8d8")
+    # === Section 3: Functionality ===
+    frame_functionality = section_with_label(main_frame, "Functionality")
+    frame_functionality.pack(side="left", fill="y", expand=True)
+    for name in ["TrainingCamps", "Sponsors", "Skins", "AI Faces", "Personal Items", "Desktop", "Aktien (Stocks)"]:
+        add_button(frame_functionality, name, button_click)
+    add_separator(main_frame)
 
-        # Layout: Link-Textfeld und Button
-        left_frame = tk.Frame(dialog, bg="#d8d8d8")
-        left_frame.pack(side="left", padx=20)
+    # === Section 4: Further ===
+    frame_further = section_with_label(main_frame, "Further")
+    frame_further.pack(side="left", fill="y", expand=True)
+    for row in [["Trophies (roh)", "Trophies präpariert", "AI Trophies"],
+                ["Portraits"],
+                ["Flags"],
+                ["Country Flags", "Country Maps"],
+                ["Vereinsheim", "Maskottchen"]]:
+        row_frame = tk.Frame(frame_further, bg="#d8d8d8")
+        row_frame.pack(anchor="w", pady=2, fill="x")
+        for label in row:
+            ttk.Button(row_frame, text=label, command=lambda l=label: button_click(l)).pack(side="left", padx=2)
 
-        # Direktlink Textfeld
-        entry_label = tk.Label(left_frame, text="Direktlink:", bg="#d8d8d8", fg="white")
-        entry_label.pack(pady=5)
+    # ============================
+    # FOOTER ELEMENTE
+    # ============================
+    quit_button = ttk.Button(root, text="Beenden", command=quit_program)
+    quit_button.place(x=18, y=y_offset)
 
-        entry_field = tk.Entry(left_frame, width=40)
-        entry_field.insert(0, "Direktlink")  # Platzhaltertext
-        entry_field.bind("<FocusIn>", lambda event: entry_field.delete(0, tk.END))  # Text löschen bei Fokus
-        entry_field.pack(pady=5, side="left")
-
-        execute_button = ttk.Button(left_frame, text="Ausführen", command=lambda: process_cities_image(download_image(entry_field.get().strip()), fm_graphics_dir_entry.get()))
-        execute_button.pack(pady=5, side="left")
-
-        paste_button = ttk.Button(left_frame, text="Aus Zwischenablage einfügen", command=lambda: paste_image(entry_field))
-        paste_button.pack(pady=5)
-
-        # Suchbutton zum Öffnen von Dateimanager
-        search_button = ttk.Button(left_frame, text="Suchen", command=lambda: open_file_dialog(entry_field))
-        search_button.pack(pady=5)
-
-        # OK Button
-        ok_button = ttk.Button(dialog, text="OK", command=lambda: process_cities_image("dummy_image", fm_graphics_dir_entry.get()))  # Dummy image für das Beispiel
-        ok_button.pack(pady=10)
-
-        # Abbrechen Button
-        cancel_button = ttk.Button(dialog, text="Abbrechen", command=dialog.destroy)
-        cancel_button.pack(pady=10)
-
-    # Funktion für das Öffnen des Dateimanagers
-    def open_file_dialog(entry_field):
-        file_path = filedialog.askopenfilename(filetypes=[("Bilddateien", "*.png;*.jpg;*.jpeg;*.bmp;*.tga")])
-        if file_path:
-            entry_field.delete(0, tk.END)
-            entry_field.insert(0, file_path)
-            img = Image.open(file_path)
-            process_cities_image(img, fm_graphics_dir_entry.get())
-            
-    # Signatur im Hauptfenster
     sign_label = tk.Label(root, text="by SlideSheapness", bg="#d8d8d8", fg="black", font=("Arial", 10, "bold"))
-    sign_label.place(relx=1.0, rely=1.0, anchor="se")  # Ohne padx und pady
+    sign_label.place(relx=1.0, rely=1.0, anchor="se")
 
-    # GUI starten
     root.mainloop()
+
 
 if __name__ == "__main__":
     main()

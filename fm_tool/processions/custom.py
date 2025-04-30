@@ -144,3 +144,6 @@ def open_custom_dialog(root, graphics_dir):
     # Button: Bild aus Zwischenablage/Link einfügen
     paste_button = tk.Button(custom_window, text="Bild einfügen", command=lambda: paste_image(entry_field, graphics_dir))
     paste_button.pack(pady=5)
+    
+    back_button = tk.Button(custom_window, text="Zurück", command=custom_window.destroy)
+    back_button.pack(pady=5)
