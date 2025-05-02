@@ -53,16 +53,29 @@ def open_badges_dialog(root, graphics_path):
     control_frame = tk.Frame(dialog, bg="#d8d8d8")
     control_frame.pack(pady=10)
 
-    url_entry = tk.Entry(control_frame, width=60)
-    url_entry.insert(0, "Bildlink einfügen...")
+    def on_url_entry_click(event):
+        if url_entry.get() == "Direktlink":
+            url_entry.delete(0, tk.END)
+
+    def on_url_change(*args):
+        url = url_var.get().strip()
+        if url.startswith("http"):
+            load_from_url()
+
+    url_var = tk.StringVar()
+    url_var.trace_add("write", lambda *args: on_url_change())
+
+    url_entry = tk.Entry(control_frame, textvariable=url_var, width=60)
+    url_entry.insert(0, "Direktlink")
+    url_entry.bind("<FocusIn>", on_url_entry_click)
     url_entry.pack(side="left", padx=5)
 
-    ttk.Button(control_frame, text="Ausführen", command=lambda: load_from_url()).pack(side="left", padx=5)
     ttk.Button(control_frame, text="Aus Zwischenablage", command=lambda: load_from_clipboard()).pack(side="left", padx=5)
+    ttk.Button(control_frame, text="Suchen", command=lambda: load_file()).pack(side="left", padx=5)
 
     ttk.Button(dialog, text="Bild laden (Datei)", command=lambda: load_file()).pack(pady=5)
     ttk.Button(dialog, text="Rahmen zurücksetzen", command=lambda: reset_frame()).pack(pady=5)
-    ttk.Button(dialog, text="Abbrechen", command=dialog.destroy).pack(pady=10)
+    ttk.Button(dialog, text="Zurück", command=dialog.destroy).pack(pady=10)
 
     def is_image_valid(img):
         return max(img.width, img.height) >= MIN_SIZE

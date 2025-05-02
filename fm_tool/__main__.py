@@ -15,6 +15,7 @@ from fm_tool.processions.cities import *
 from fm_tool.processions.stadiums import *
 from fm_tool.processions.badges import *
 from fm_tool.processions.custom import *
+from fm_tool.processions.badpre import *
 
 def main():
     # ============================
@@ -106,10 +107,12 @@ def main():
             open_cities_dialog(root, fm_graphics_dir_entry.get())
         elif button_name == "Stadiums":
             open_stadiums_dialog(root, fm_graphics_dir_entry.get())
-        elif button_name == "Badges Club Roh":
+        elif button_name == "Club roh (Alpha)":
             open_badges_dialog(root, fm_graphics_dir_entry.get())
         elif button_name == "Custom":
             open_custom_dialog(root, fm_graphics_dir_entry.get())
+        elif button_name == "Club präpariert":
+            open_badpre_dialog(root, fm_graphics_dir_entry.get())
         else:
             print(f"{button_name} wurde gedrückt")
 
